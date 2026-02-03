@@ -1,0 +1,36 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: 'Inter', system-ui, sans-serif;
+
+  /* Brand Colors */
+  --color-sc-navy: #0B1121;
+  --color-sc-navy-card: #151E32;
+  --color-sc-magenta: #D9258B;
+  --color-sc-cyan: #00C2CB;
+  --color-sc-purple: #6B21A8;
+  
+  /* Semantic mappings if needed, or just use the sc-* colors directly */
+}
+
+/* Global Styles */
+body {
+  background-color: var(--color-sc-navy);
+  color: white;
+  font-family: var(--font-sans);
+}
+
+/* Custom Scrollbar for a premium feel */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-sc-navy); 
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-sc-navy-card); 
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-sc-magenta); 
+}
