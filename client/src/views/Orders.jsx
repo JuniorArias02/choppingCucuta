@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Eye, Search, Filter, Calendar, Download } from 'lucide-react';
+import { Eye, Search, Filter, Calendar, Download, X, Package, Truck } from 'lucide-react';
 import OrderService from '../services/OrderService';
 import Swal from 'sweetalert2';
 
@@ -36,11 +36,13 @@ export default function Orders() {
 
     const getStatusColor = (status) => {
         switch (status) {
-            case 'Pendiente': return 'bg-amber-500/10 text-amber-500 border border-amber-500/20';
-            case 'Preparando': return 'bg-orange-500/10 text-orange-500 border border-orange-500/20';
-            case 'Enviado': return 'bg-blue-500/10 text-blue-500 border border-blue-500/20';
-            case 'Entregado': return 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20';
-            case 'Cancelado': return 'bg-red-500/10 text-red-500 border border-red-500/20';
+            case 'pendiente': return 'bg-amber-500/10 text-amber-500 border border-amber-500/20';
+            case 'pagado': return 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20';
+            case 'procesando': return 'bg-blue-500/10 text-blue-500 border border-blue-500/20';
+            case 'enviado': return 'bg-indigo-500/10 text-indigo-500 border border-indigo-500/20';
+            case 'entregado': return 'bg-green-500/10 text-green-500 border border-green-500/20';
+            case 'cancelado': return 'bg-red-500/10 text-red-500 border border-red-500/20';
+            case 'reembolsado': return 'bg-orange-500/10 text-orange-500 border border-orange-500/20';
             default: return 'bg-slate-500/10 text-slate-500 border border-slate-500/20';
         }
     };
@@ -76,6 +78,131 @@ export default function Orders() {
             confirmButtonText: 'Cerrar',
             width: 400
         });
+    };
+
+    const handleCancelOrder = async (id) => {
+        const order = orders.find(o => o.id === id);
+        if (!order || order.estado !== 'pendiente') {
+            Swal.fire({
+                title: 'Error',
+                text: 'Solo se pueden cancelar pedidos pendientes',
+                icon: 'error',
+                background: '#151E32',
+                color: '#fff',
+                confirmButtonColor: '#00C2CB'
+            });
+            return;
+        }
+
+        const result = await Swal.fire({
+            title: '¿Cancelar Pedido?',
+            html: `
+                <div class="text-left">
+                    <p class="text-slate-300 mb-3">¿Estás seguro de que deseas cancelar el pedido #${id}?</p>
+                    <div class="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3">
+                        <p class="text-amber-400 text-sm">Esta acción liberará el stock reservado y no se podrá deshacer.</p>
+                    </div>
+                </div>
+            `,
+            icon: 'warning',
+            background: '#151E32',
+            color: '#fff',
+            showCancelButton: true,
+            confirmButtonColor: '#ef4444',
+            cancelButtonColor: '#475569',
+            confirmButtonText: 'Sí, Cancelar',
+            cancelButtonText: 'No'
+        });
+
+        if (result.isConfirmed) {
+            try {
+                await OrderService.cancelOrder(id);
+
+                // Update local state
+                setOrders(prev => prev.map(o =>
+                    o.id === id ? { ...o, estado: 'cancelado' } : o
+                ));
+
+                Swal.fire({
+                    title: 'Pedido Cancelado',
+                    text: 'El pedido ha sido cancelado exitosamente.',
+                    icon: 'success',
+                    background: '#151E32',
+                    color: '#fff',
+                    confirmButtonColor: '#00C2CB'
+                });
+            } catch (error) {
+                console.error('Error canceling order:', error);
+                Swal.fire({
+                    title: 'Error',
+                    text: error.response?.data?.message || 'No se pudo cancelar el pedido.',
+                    icon: 'error',
+                    background: '#151E32',
+                    color: '#fff',
+                    confirmButtonColor: '#00C2CB'
+                });
+            }
+        }
+    };
+
+    const handleUpdateStatus = async (id, newStatus) => {
+        const order = orders.find(o => o.id === id);
+        if (!order) return;
+
+        const statusLabels = {
+            'procesando': 'Procesando (Empacando)',
+            'enviado': 'Enviado'
+        };
+
+        const result = await Swal.fire({
+            title: `¿Cambiar estado a "${statusLabels[newStatus]}"?`,
+            html: `
+                <div class="text-left">
+                    <p class="text-slate-300 mb-3">Pedido #${id}</p>
+                    <div class="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+                        <p class="text-blue-400 text-sm">Esta acción actualizará el estado del pedido.</p>
+                    </div>
+                </div>
+            `,
+            icon: 'question',
+            background: '#151E32',
+            color: '#fff',
+            showCancelButton: true,
+            confirmButtonColor: '#00C2CB',
+            cancelButtonColor: '#475569',
+            confirmButtonText: 'Sí, Cambiar',
+            cancelButtonText: 'Cancelar'
+        });
+
+        if (result.isConfirmed) {
+            try {
+                await OrderService.updateOrderStatus(id, newStatus);
+                
+                // Update local state
+                setOrders(prev => prev.map(o => 
+                    o.id === id ? { ...o, estado: newStatus } : o
+                ));
+
+                Swal.fire({
+                    title: 'Estado Actualizado',
+                    text: `El pedido ahora está en estado "${statusLabels[newStatus]}".`,
+                    icon: 'success',
+                    background: '#151E32',
+                    color: '#fff',
+                    confirmButtonColor: '#00C2CB'
+                });
+            } catch (error) {
+                console.error('Error updating order status:', error);
+                Swal.fire({
+                    title: 'Error',
+                    text: error.response?.data?.message || 'No se pudo actualizar el estado del pedido.',
+                    icon: 'error',
+                    background: '#151E32',
+                    color: '#fff',
+                    confirmButtonColor: '#00C2CB'
+                });
+            }
+        }
     };
 
     const filteredOrders = orders.filter(order =>
@@ -160,13 +287,24 @@ export default function Orders() {
                                         </span>
                                     </td>
                                     <td className="p-5 text-right">
-                                        <button
-                                            onClick={() => handleViewOrder(order.id)}
-                                            className="p-2 text-slate-400 hover:text-sc-cyan hover:bg-sc-cyan/10 rounded-lg transition-all"
-                                            title="Ver Detalles"
-                                        >
-                                            <Eye size={18} />
-                                        </button>
+                                        <div className="flex items-center justify-end gap-2">
+                                            <button
+                                                onClick={() => handleViewOrder(order.id)}
+                                                className="p-2 text-slate-400 hover:text-sc-cyan hover:bg-sc-cyan/10 rounded-lg transition-all"
+                                                title="Ver Detalles"
+                                            >
+                                                <Eye size={18} />
+                                            </button>
+                                            {order.estado === 'pendiente' && (
+                                                <button
+                                                    onClick={() => handleCancelOrder(order.id)}
+                                                    className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all"
+                                                    title="Cancelar Pedido"
+                                                >
+                                                    <X size={18} />
+                                                </button>
+                                            )}
+                                        </div>
                                     </td>
                                 </tr>
                             ))}

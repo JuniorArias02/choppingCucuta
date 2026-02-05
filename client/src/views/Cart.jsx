@@ -68,7 +68,7 @@ export default function Cart() {
         }
     };
 
-    const handleCheckout = () => {
+    const handleCheckout = async () => {
         if (!user) {
             Swal.fire({
                 title: 'Inicia sesión para continuar',
@@ -89,15 +89,135 @@ export default function Cart() {
             return;
         }
 
-        // Proceed to mock checkout
-        Swal.fire({
-            title: '¡Pedido Confirmado!',
-            text: 'Gracias por tu compra (Mock Checkout).',
-            icon: 'success',
+        // Show checkout modal with shipping info
+        const { value: formValues } = await Swal.fire({
+            title: '<span class="text-white">Información de Envío</span>',
+            html: `
+                <div class="text-left space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-1">Dirección de envío *</label>
+                        <input id="direccion" class="swal2-input w-full !m-0" placeholder="Calle 123 #45-67" required>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-1">Ciudad *</label>
+                            <input id="ciudad" class="swal2-input w-full !m-0" placeholder="Cúcuta" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-slate-300 mb-1">Código Postal</label>
+                            <input id="codigo_postal" class="swal2-input w-full !m-0" placeholder="540001">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-1">Teléfono *</label>
+                        <input id="telefono" class="swal2-input w-full !m-0" placeholder="+57 300 123 4567" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-1">Método de Pago *</label>
+                        <select id="metodo_pago" class="swal2-input w-full !m-0" required>
+                            <option value="">Selecciona un método</option>
+                            <option value="efectivo">Efectivo (Pago contra entrega)</option>
+                            <option value="transferencia">Transferencia Bancaria</option>
+                            <option value="stripe">Tarjeta de Crédito (Stripe)</option>
+                            <option value="wompi">Wompi</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-300 mb-1">Notas (Opcional)</label>
+                        <textarea id="notas" class="swal2-textarea w-full !m-0" placeholder="Instrucciones especiales de entrega..."></textarea>
+                    </div>
+                </div>
+            `,
             background: '#151E32',
             color: '#fff',
-            confirmButtonColor: '#00C2CB'
+            confirmButtonColor: '#00C2CB',
+            cancelButtonColor: '#475569',
+            confirmButtonText: 'Confirmar Pedido',
+            cancelButtonText: 'Cancelar',
+            showCancelButton: true,
+            width: 600,
+            preConfirm: () => {
+                const direccion = document.getElementById('direccion').value;
+                const ciudad = document.getElementById('ciudad').value;
+                const telefono = document.getElementById('telefono').value;
+                const metodo_pago = document.getElementById('metodo_pago').value;
+
+                if (!direccion || !ciudad || !telefono || !metodo_pago) {
+                    Swal.showValidationMessage('Por favor completa todos los campos obligatorios');
+                    return false;
+                }
+
+                return {
+                    direccion_envio: direccion,
+                    ciudad: ciudad,
+                    codigo_postal: document.getElementById('codigo_postal').value,
+                    telefono: telefono,
+                    metodo_pago: metodo_pago,
+                    notas_cliente: document.getElementById('notas').value
+                };
+            }
         });
+
+        if (formValues) {
+            // Create order
+            try {
+                Swal.fire({
+                    title: 'Procesando pedido...',
+                    text: 'Por favor espera',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    },
+                    background: '#151E32',
+                    color: '#fff'
+                });
+
+                const OrderService = (await import('../services/OrderService')).default;
+                const response = await OrderService.createOrder(formValues);
+
+                // Clear cart items
+                setItems([]);
+
+                Swal.fire({
+                    title: '¡Pedido Creado!',
+                    html: `
+                        <div class="text-left space-y-3">
+                            <p class="text-slate-300">Tu pedido #${response.pedido.id} ha sido creado exitosamente.</p>
+                            <div class="bg-emerald-500/10 border border-emerald-500/20 rounded-lg p-3">
+                                <p class="text-emerald-400 text-sm">
+                                    <strong>Estado:</strong> Pagado ✓
+                                </p>
+                                <p class="text-emerald-400 text-sm mt-1">
+                                    El pedido está listo para ser procesado y enviado.
+                                </p>
+                            </div>
+                            <p class="text-slate-400 text-sm">Puedes ver el estado de tu pedido en "Mis Pedidos".</p>
+                        </div>
+                    `,
+                    icon: 'success',
+                    background: '#151E32',
+                    color: '#fff',
+                    confirmButtonColor: '#00C2CB',
+                    confirmButtonText: 'Ver Mis Pedidos'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Redirect based on user role
+                        const ordersRoute = user.rol_id === 3 ? '/client/orders' : '/admin/orders';
+                        navigate(ordersRoute);
+                    }
+                });
+            } catch (error) {
+                console.error('Error creating order:', error);
+                Swal.fire({
+                    title: 'Error',
+                    text: error.response?.data?.message || 'No se pudo crear el pedido. Intenta nuevamente.',
+                    icon: 'error',
+                    background: '#151E32',
+                    color: '#fff',
+                    confirmButtonColor: '#00C2CB'
+                });
+            }
+        }
     };
 
     const subtotal = items.reduce((acc, item) => acc + (item.precio_unitario * item.cantidad), 0);

@@ -31,7 +31,22 @@ const RoleGuard = ({ children, allowedRoles }) => {
     return <Navigate to="/" replace />;
 };
 
+// Orders redirect based on role
+const OrdersRedirect = () => {
+    const { user } = useAuth();
+    if (!user) {
+        return <Navigate to="/login" replace />;
+    }
+    // Client role (3) goes to /client/orders, others go to /admin/orders
+    const ordersRoute = user.rol_id === 3 ? '/client/orders' : '/admin/orders';
+    return <Navigate to={ordersRoute} replace />;
+};
+
 const router = createBrowserRouter([
+    {
+        path: '/orders',
+        element: <OrdersRedirect />
+    },
     {
         path: '/dashboard',
         element: <Navigate to="/admin/dashboard" replace />
