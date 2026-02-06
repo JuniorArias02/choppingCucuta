@@ -1,10 +1,33 @@
 import { Link, useLocation } from 'react-router-dom';
 import { LayoutDashboard, Package, PlusCircle, ShoppingBag, LogOut, Home, X, Settings } from 'lucide-react';
 import { useAuth } from '../../store/AuthContext';
+import Swal from 'sweetalert2';
 
 export default function Sidebar({ isOpen, setIsOpen }) {
     const { logout } = useAuth();
     const location = useLocation();
+
+    const handleLogout = () => {
+        Swal.fire({
+            title: '¿Cerrar Sesión?',
+            text: "¿Estás seguro de que deseas salir?",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#D9258B',
+            cancelButtonColor: '#1e293b',
+            confirmButtonText: 'Sí, salir',
+            cancelButtonText: 'Cancelar',
+            background: '#151E32',
+            color: '#fff',
+            customClass: {
+                popup: 'border border-white/10 shadow-2xl shadow-sc-magenta/10 rounded-2xl'
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                logout();
+            }
+        });
+    };
 
     const menuItems = [
         { path: '/admin/dashboard', label: 'Resumen', icon: LayoutDashboard },
@@ -96,7 +119,7 @@ export default function Sidebar({ isOpen, setIsOpen }) {
                             Ir a la Tienda
                         </Link>
                         <button
-                            onClick={logout}
+                            onClick={handleLogout}
                             className="w-full flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-xl transition-all font-medium"
                         >
                             <LogOut size={20} />

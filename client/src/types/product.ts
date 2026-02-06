@@ -5,7 +5,7 @@ export interface ProductAttribute {
 export interface ProductVariant {
     id: number;
     product_id: number;
-    sku: string;
+    sku?: string;
     precio: number;
     stock: number;
     atributos: ProductAttribute;

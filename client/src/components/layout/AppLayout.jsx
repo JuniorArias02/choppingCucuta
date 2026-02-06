@@ -82,10 +82,10 @@ export default function AppLayout() {
                                         <div className="absolute top-full right-0 pt-4 w-56 hidden group-hover:block transition-all z-50">
                                             <div className="bg-sc-navy-card rounded-2xl shadow-2xl border border-slate-700 overflow-hidden">
                                                 <Link
-                                                    to={user.rol_id === 3 ? "/client/dashboard" : "/admin/dashboard"}
+                                                    to={user.rol_id === 2 ? "/client/dashboard" : "/admin/dashboard"}
                                                     className="block px-4 py-3 text-sm text-slate-300 hover:bg-white/5 hover:text-sc-cyan font-medium flex items-center gap-3 transition-colors"
                                                 >
-                                                    <LayoutDashboard size={18} /> {user.rol_id === 3 ? "Ir a mi Panel" : "Ir al Panel Admin"}
+                                                    <LayoutDashboard size={18} /> {user.rol_id === 2 ? "Ir a mi Panel" : "Ir al Panel Admin"}
                                                 </Link>
                                                 <button onClick={logout} className="w-full text-left px-4 py-3 text-sm text-red-400 hover:bg-red-500/10 hover:text-red-300 font-medium flex items-center gap-3 transition-colors border-t border-slate-700/50">
                                                     <LogOut size={18} /> Cerrar Sesión

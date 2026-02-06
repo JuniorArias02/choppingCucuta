@@ -29,8 +29,6 @@ export default function ProductDetail() {
                 const transformedProduct = {
                     ...data,
                     imagenes: data.imagenes.map(img => typeof img === 'string' ? img : img.url_imagen),
-                    // Ensure attributes structure matches if needed (API returns nested, mock was flat?)
-                    // Assuming API returns comparable structure for now based on controllers
                 };
                 setProduct(transformedProduct);
 
@@ -50,36 +48,12 @@ export default function ProductDetail() {
         fetchProduct();
     }, [id]);
 
-    // Validation Logic (moved here to safe guard against null product)
+    // Validation Logic
     const isReadyToAdd = product && Object.keys(selectedAttrs || {}).length > 0 &&
         product.variantes.some(v =>
             Object.keys(selectedAttrs || {}).every(k => v.atributos && v.atributos[k] === selectedAttrs[k]) && v.stock > 0
         );
 
-    const currentVariant = product ? product.variantes.find(v => {
-        // Need to be careful with attribute matching. 
-        // In MOCK: v.atributos = { Talla: 'M', Color: 'Rojo' }
-        // In API: v.valores = [ { attribute: { nombre: 'Talla' }, valor: 'M' } ] - Wait, backend structure!
-        // Let's check ProductController output structure or just assume simple for now and fix later if broken.
-        // Actually, assuming standard pivot structure in backend might need mapping.
-        // For now, let's assume the backend 'variantes' has a simple structure or we map it in frontend service.
-        // Wait, looking at ProductController 'variantes' relationship, it returns 'variantes.valores.atributo'.
-        // This is complex. Mock was: v.atributos = { Key: Value }
-        // API likely returns: v.valores = [{ valor: 'Rojo', atributo: { nombre: 'Color' } }]
-
-        // I should probably simplify the matching logic or transform the data in useEffect.
-        // Transforming is safer.
-        return true;
-    }) : null;
-
-    // However, I can't easily transform variants without seeing exact JSON.
-    // Given user wants "MOCK_PRODUCTS replacement", I'll try to keep it simple.
-    // If the API returns variants with straightforward attributes or I can assume they do.
-    // Let's check ProductController show method: `variantes.valores.atributo`.
-    // So distinct attributes are NOT on the variant root.
-    // I will write a helper to flatten attributes.
-
-    // Re-writing the effect to flatten attributes for compatibility
     const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
     useEffect(() => {
@@ -117,6 +91,11 @@ export default function ProductDetail() {
                 };
 
                 setProduct(transformedProduct);
+
+                // Initialize default attributes immediately
+                if (flattenedVariants.length > 0) {
+                    setSelectedAttrs(flattenedVariants[0].atributos || {});
+                }
             } catch (error) {
                 console.error("Error loading product", error);
             } finally {
@@ -127,7 +106,57 @@ export default function ProductDetail() {
     }, [id]);
 
 
-    // 1. Extract all available Attribute Keys (Safe guard)
+    useEffect(() => {
+        const fetchProduct = async () => {
+            try {
+                const data = await ProductService.getById(id);
+
+                // Flatten variants attributes
+                const flattenedVariants = (data.variantes || []).map(v => {
+                    let simpleAttrs = {};
+                    if (v.valores && Array.isArray(v.valores)) {
+                        v.valores.forEach(val => {
+                            if (val.atributo) {
+                                simpleAttrs[val.atributo.nombre] = val.valor;
+                            }
+                        });
+                    } else if (v.atributos) {
+                        simpleAttrs = v.atributos;
+                    }
+
+                    return {
+                        ...v,
+                        atributos: simpleAttrs
+                    };
+                });
+
+                const transformedProduct = {
+                    ...data,
+                    categoria: data.categoria?.nombre || 'Sin categoría',
+                    imagenes: (data.imagenes || []).map(img => {
+                        const url = typeof img === 'string' ? img : img.url_imagen;
+                        return url.startsWith('http') ? url : `${API_URL}${url}`;
+                    }),
+                    variantes: flattenedVariants
+                };
+
+                setProduct(transformedProduct);
+
+                // Initialize default attributes immediately to prevent flash of "No available" state
+                if (flattenedVariants.length > 0) {
+                    setSelectedAttrs(flattenedVariants[0].atributos || {});
+                }
+            } catch (error) {
+                console.error("Error loading product", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchProduct();
+    }, [id]);
+
+
+    // 1. Extract all available Attribute Keys
     const allAttrKeys = product ? Array.from(new Set(
         product.variantes.flatMap(v => Object.keys(v.atributos || {}))
     )) : [];
@@ -136,13 +165,6 @@ export default function ProductDetail() {
     const activeVariant = product ? product.variantes.find(v => {
         return allAttrKeys.length > 0 && allAttrKeys.every(key => v.atributos[key] === selectedAttrs[key]);
     }) : null;
-
-    useEffect(() => {
-        if (product && Object.keys(selectedAttrs).length === 0 && product.variantes.length > 0) {
-            // Default to first variant attributes
-            setSelectedAttrs(product.variantes[0].atributos || {});
-        }
-    }, [product]);
 
     const handleAddToCart = async () => {
         const user = AuthService.getCurrentUser();

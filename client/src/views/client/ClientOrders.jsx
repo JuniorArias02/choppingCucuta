@@ -43,6 +43,14 @@ export default function ClientOrders() {
         }
     };
 
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+
+    const getImageUrl = (img) => {
+        if (!img) return 'https://placehold.co/400x500?text=No+Image';
+        if (img.startsWith('http')) return img;
+        return `${API_URL}${img}`;
+    };
+
     if (loading) {
         return (
             <div className="flex justify-center items-center h-64">
@@ -120,7 +128,7 @@ export default function ClientOrders() {
                                         <div key={item.id} className="flex items-center gap-4 bg-sc-navy rounded-xl p-3 border border-white/5">
                                             <div className="w-16 h-16 bg-white/5 rounded-lg overflow-hidden flex-shrink-0">
                                                 <img
-                                                    src={item.imagen}
+                                                    src={getImageUrl(item.imagen)}
                                                     alt={item.producto}
                                                     className="w-full h-full object-cover"
                                                 />

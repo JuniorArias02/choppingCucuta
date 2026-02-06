@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('productos', function (Blueprint $table) {
-            $table->integer('descuento')->default(0)->after('activo');
+        Schema::table('usuarios', function (Blueprint $table) {
+            $table->timestamp('last_login_at')->nullable()->after('updated_at');
         });
     }
 
@@ -21,8 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('productos', function (Blueprint $table) {
-            //
+        Schema::table('usuarios', function (Blueprint $table) {
+            $table->dropColumn('last_login_at');
         });
     }
 };

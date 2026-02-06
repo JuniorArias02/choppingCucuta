@@ -208,14 +208,33 @@ export default function Cart() {
                 });
             } catch (error) {
                 console.error('Error creating order:', error);
-                Swal.fire({
-                    title: 'Error',
-                    text: error.response?.data?.message || 'No se pudo crear el pedido. Intenta nuevamente.',
-                    icon: 'error',
-                    background: '#151E32',
-                    color: '#fff',
-                    confirmButtonColor: '#00C2CB'
-                });
+
+                if (error.response?.data?.code === 'PROFILE_INCOMPLETE') {
+                    Swal.fire({
+                        title: 'Perfil Incompleto',
+                        text: error.response.data.message,
+                        icon: 'warning',
+                        background: '#151E32',
+                        color: '#fff',
+                        confirmButtonColor: '#D9258B',
+                        confirmButtonText: 'Ir a mi Perfil',
+                        showCancelButton: true,
+                        cancelButtonText: 'Cancelar'
+                    }).then((result) => {
+                        if (result.isConfirmed) {
+                            navigate('/client/settings');
+                        }
+                    });
+                } else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: error.response?.data?.message || 'No se pudo crear el pedido. Intenta nuevamente.',
+                        icon: 'error',
+                        background: '#151E32',
+                        color: '#fff',
+                        confirmButtonColor: '#00C2CB'
+                    });
+                }
             }
         }
     };

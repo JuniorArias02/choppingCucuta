@@ -44,6 +44,16 @@ class AuthService {
         return response.data;
     }
 
+    async sendRecoveryCode(email) {
+        const response = await api.post('/forgot-password', { email });
+        return response.data;
+    }
+
+    async resetPassword(data) {
+        const response = await api.post('/reset-password', data);
+        return response.data;
+    }
+
     async verifyAuth() {
         try {
             const response = await api.get('/user');

@@ -20,13 +20,14 @@ export default function CreateProduct() {
     });
 
     const [categories, setCategories] = useState([]);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Images State (Real Files)
     const [images, setImages] = useState([]); // Array of { file: File, preview: string }
 
     // Variants State
     const [variants, setVariants] = useState([
-        { id: Date.now(), sku: '', color: '', talla: '', precio: '', stock: 0 }
+        { id: Date.now(), color: '', talla: '', precio: '', stock: 0 }
     ]);
 
     useEffect(() => {
@@ -74,7 +75,7 @@ export default function CreateProduct() {
     };
 
     const addVariant = () => {
-        setVariants([...variants, { id: Date.now(), sku: '', color: '', talla: '', precio: basicInfo.precioBase, stock: 0 }]);
+        setVariants([...variants, { id: Date.now(), color: '', talla: '', precio: basicInfo.precioBase, stock: 0 }]);
     };
 
     const removeVariant = (id) => {
@@ -101,6 +102,8 @@ export default function CreateProduct() {
             });
             return;
         }
+
+        setIsSubmitting(true);
 
         try {
             const formData = new FormData();
@@ -140,6 +143,8 @@ export default function CreateProduct() {
                 background: '#151E32',
                 color: '#fff'
             });
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -271,17 +276,8 @@ export default function CreateProduct() {
 
                     <div className="space-y-3">
                         {variants.map((variant, index) => (
-                            <div key={variant.id} className="grid grid-cols-12 gap-3 items-end p-4 bg-sc-navy rounded-xl border border-slate-800 hover:border-slate-700 transition-colors">
-                                <div className="col-span-6 md:col-span-3">
-                                    <label className="text-xs text-slate-500 font-bold block mb-1.5">SKU</label>
-                                    <input
-                                        type="text"
-                                        className="w-full bg-sc-navy-card border border-slate-700 rounded-lg p-2.5 text-sm text-white focus:border-sc-cyan outline-none transition-colors"
-                                        placeholder="CODE-001"
-                                        value={variant.sku}
-                                        onChange={(e) => handleVariantChange(variant.id, 'sku', e.target.value)}
-                                    />
-                                </div>
+                            <div key={variant.id} className="grid grid-cols-10 gap-3 items-end p-4 bg-sc-navy rounded-xl border border-slate-800 hover:border-slate-700 transition-colors">
+
                                 <div className="col-span-6 md:col-span-2">
                                     <label className="text-xs text-slate-500 font-bold block mb-1.5">Color</label>
                                     <input
@@ -340,8 +336,20 @@ export default function CreateProduct() {
                 <div className="flex items-center justify-end gap-4 pt-4 sticky bottom-6 z-40">
                     <div className="absolute inset-0 bg-sc-navy/80 backdrop-blur-sm -z-10 rounded-2xl blur-xl"></div>
                     <button type="button" onClick={() => navigate('/admin/products')} className="px-6 py-3 text-slate-400 hover:text-white transition-colors font-medium">Cancelar</button>
-                    <button type="submit" className="px-8 py-3.5 bg-gradient-to-r from-sc-magenta to-purple-600 hover:to-purple-500 text-white font-bold rounded-xl shadow-lg shadow-sc-magenta/20 hover:shadow-sc-magenta/40 hover:-translate-y-1 transition-all flex items-center gap-2">
-                        <Save size={20} /> Guardar Producto
+                    <button type="submit" disabled={isSubmitting} className="px-8 py-3.5 bg-gradient-to-r from-sc-magenta to-purple-600 hover:to-purple-500 text-white font-bold rounded-xl shadow-lg shadow-sc-magenta/20 hover:shadow-sc-magenta/40 hover:-translate-y-1 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                        {isSubmitting ? (
+                            <>
+                                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                Guardando...
+                            </>
+                        ) : (
+                            <>
+                                <Save size={20} /> Guardar Producto
+                            </>
+                        )}
                     </button>
                 </div>
 

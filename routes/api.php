@@ -6,12 +6,18 @@ use App\Http\Controllers\AuthController;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('/forgot-password', [AuthController::class, 'sendResetCode']);
+Route::post('/reset-password', [AuthController::class, 'verifyAndResetPassword']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/user', function (Request $request) {
         return $request->user()->load('perfil');
     });
+
+    // Dashboard
+    Route::get('/dashboard/stats', [\App\Http\Controllers\DashboardController::class, 'stats']);
+    Route::get('/client/dashboard/stats', [\App\Http\Controllers\DashboardController::class, 'clientStats']);
 });
 
 use App\Http\Controllers\CategoryController;
@@ -45,6 +51,11 @@ Route::middleware('auth:sanctum')->group(function () {
     // Order Routes
     Route::get('/orders', [App\Http\Controllers\OrderController::class, 'index']);
     Route::post('/orders', [App\Http\Controllers\OrderController::class, 'store']);
+    Route::post('/orders/{pedido}/cancel', [App\Http\Controllers\OrderController::class, 'cancel']);
+    Route::put('/orders/{pedido}/status', [App\Http\Controllers\OrderController::class, 'updateStatus']);
+
+    // Payment Routes
+    Route::post('/payments/{pago}/confirm', [App\Http\Controllers\PaymentController::class, 'confirm']);
 
     // Favorites
     Route::get('/favorites', [ProductController::class, 'favorites']);

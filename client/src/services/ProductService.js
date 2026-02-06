@@ -42,6 +42,17 @@ class ProductService {
      * @param {any} data 
      */
     async update(id, data) {
+        const config = {};
+        if (data instanceof FormData) {
+            config.headers = { 'Content-Type': 'multipart/form-data' };
+            // Note: Laravel often needs _method: 'PUT' in POST request for FormData
+            // The method logic is handled in the caller or here. 
+            // If the caller sends a POST with _method=PUT, we should use api.post
+            if (data.has('_method') && data.get('_method') === 'PUT') {
+                const response = await api.post(`/products/${id}`, data, config);
+                return response.data;
+            }
+        }
         const response = await api.put(`/products/${id}`, data);
         return response.data;
     }

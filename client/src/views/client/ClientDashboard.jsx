@@ -16,21 +16,13 @@ export default function ClientDashboard() {
     useEffect(() => {
         const fetchStats = async () => {
             try {
-                // Fetch orders to count
-                const ordersRes = await api.get('/orders');
-                const orders = ordersRes.data.data || [];
-
-                const pending = orders.filter(o => o.estado === 'Pendiente' || o.estado === 'Enviado').length;
-                const completed = orders.filter(o => o.estado === 'Entregado').length;
-
-                // Fetch favorites count
-                const favRes = await api.get('/favorites');
-                const favCount = favRes.data.total || 0;
+                const response = await api.get('/client/dashboard/stats');
+                const data = response.data;
 
                 setStats({
-                    pendingOrders: pending,
-                    completedOrders: completed,
-                    favorites: favCount
+                    pendingOrders: data.pending_orders || 0,
+                    completedOrders: data.completed_orders || 0,
+                    favorites: data.favorites || 0
                 });
             } catch (error) {
                 console.error("Error fetching client stats", error);

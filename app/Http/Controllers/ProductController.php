@@ -76,7 +76,7 @@ class ProductController extends Controller
                 foreach ($request->variantes as $varianteData) {
                     $variante = ProductoVariante::create([
                         'producto_id' => $producto->id,
-                        'sku' => $varianteData['sku'],
+                        'sku' => $varianteData['sku'] ?? null, // Model handles generation if null
                         'precio' => $varianteData['precio'],
                         'stock' => $varianteData['stock'] ?? 0,
                     ]);

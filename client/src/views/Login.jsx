@@ -84,9 +84,9 @@ export default function Login() {
                     </button>
 
                     <div className="text-center space-y-3">
-                        <a href="#" className="text-xs text-slate-500 hover:text-white transition-colors block">
+                        <Link to="/password-reset" className="text-xs text-slate-500 hover:text-white transition-colors block">
                             ¿Olvidaste tu contraseña?
-                        </a>
+                        </Link>
                         <div className="pt-2 border-t border-white/5">
                             <Link to="/register" className="text-sm text-slate-400 hover:text-white transition-colors">
                                 ¿No tienes cuenta? <span className="text-sc-magenta font-bold">Crear Cuenta</span>

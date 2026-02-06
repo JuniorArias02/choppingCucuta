@@ -1,5 +1,6 @@
-import { Menu, Search, Bell, ChevronDown } from 'lucide-react';
+import { Menu, Search, Bell, ChevronDown, Home } from 'lucide-react';
 import { useAuth } from '../../store/AuthContext';
+import { Link } from 'react-router-dom';
 
 export default function TopBar({ onMenuClick }) {
     const { user } = useAuth();
@@ -16,7 +17,7 @@ export default function TopBar({ onMenuClick }) {
                     <Menu size={24} />
                 </button>
 
-                {/* Search Bar - Placeholder for future implementation */}
+                {/* Search Bar - Placeholder */}
                 <div className="hidden md:flex items-center gap-2 px-4 py-2.5 rounded-full bg-sc-navy-card/80 border border-slate-700/50 hover:border-sc-cyan/30 hover:bg-sc-navy-card transition-all group w-64 lg:w-96 focus-within:w-[26rem] focus-within:border-sc-cyan/50 focus-within:ring-2 focus-within:ring-sc-cyan/20">
                     <Search size={18} className="text-slate-500 group-hover:text-sc-cyan transition-colors" />
                     <input
@@ -28,6 +29,12 @@ export default function TopBar({ onMenuClick }) {
             </div>
 
             <div className="flex items-center gap-4 md:gap-6">
+
+                {/* Go to Store */}
+                <Link to="/" className="p-2 text-slate-400 hover:text-sc-cyan transition-colors rounded-full hover:bg-white/5" title="Ir a la Tienda">
+                    <Home size={20} />
+                </Link>
+
                 {/* Notifications */}
                 <button className="relative p-2 text-slate-400 hover:text-white transition-colors rounded-full hover:bg-white/5">
                     <Bell size={20} />
@@ -39,7 +46,7 @@ export default function TopBar({ onMenuClick }) {
                     <div className="hidden md:block text-right">
                         <p className="text-sm font-semibold text-white leading-tight">{user?.nombre}</p>
                         <p className="text-xs text-sc-cyan font-medium capitalize mt-0.5">
-                            {user?.rol_id === 1 ? 'Administrador' : 'Vendedor'}
+                            {user?.rol_id === 1 ? 'Administrador' : 'Cliente'}
                         </p>
                     </div>
                     <div className="flex items-center gap-2 cursor-pointer group p-1 rounded-full hover:bg-white/5 transition-all">

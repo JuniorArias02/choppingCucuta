@@ -9,6 +9,15 @@ class ProductoVariante extends Model
 {
     use HasFactory;
 
+    protected static function booted()
+    {
+        static::creating(function ($model) {
+            if (empty($model->sku)) {
+                $model->sku = 'SKU-' . strtoupper(uniqid());
+            }
+        });
+    }
+
     protected $table = 'producto_variantes';
 
     protected $fillable = [

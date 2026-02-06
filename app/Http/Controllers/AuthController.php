@@ -10,6 +10,13 @@ use Illuminate\Support\Facades\Validator;
 
 class AuthController extends Controller
 {
+    protected $emailService;
+
+    public function __construct(\App\Services\EmailService $emailService)
+    {
+        $this->emailService = $emailService;
+    }
+
     // Registro de usuario
     public function register(Request $request)
     {
@@ -28,7 +35,7 @@ class AuthController extends Controller
             'nombre' => $request->nombre,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'rol_id' => $request->rol_id ?? 3, // Default to Client (3)
+            'rol_id' => $request->rol_id ?? 2, // Default to Client (2)
             'estado' => 'activo',
         ]);
 
@@ -54,6 +61,17 @@ class AuthController extends Controller
         if ($user->estado !== 'activo') {
             return response()->json(['message' => 'User account is inactive'], 403);
         }
+
+        // Check for first login
+        if (is_null($user->last_login_at)) {
+            $this->emailService->sendWelcomeEmail($user);
+        }
+
+        // Send Login Alert
+        $this->emailService->sendLoginAlert($user, $request->ip(), $request->userAgent());
+
+        // Update last login time
+        $user->update(['last_login_at' => now()]);
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
@@ -136,6 +154,73 @@ class AuthController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
+        $this->emailService->sendPasswordChangedAlert($user);
+
         return response()->json(['message' => 'Password changed successfully']);
+    }
+
+    // Enviar código de recuperación
+    public function sendResetCode(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email|exists:usuarios,email',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['message' => 'Email not found'], 404);
+        }
+
+        $user = User::where('email', $request->email)->first();
+        
+        // Generate 6-digit code
+        $code = rand(100000, 999999);
+        
+        // Store in Cache for 15 minutes
+        // Key format: password_reset_EMAIL
+        \Illuminate\Support\Facades\Cache::put('password_reset_' . $user->email, $code, now()->addMinutes(15));
+
+        $this->emailService->sendRecoveryCode($user, $code);
+
+        return response()->json(['message' => 'Recovery code sent']);
+    }
+
+    // Verificar código y cambiar contraseña
+    public function verifyAndResetPassword(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email|exists:usuarios,email',
+            'code' => 'required|string',
+            'password' => 'required|string|min:8|confirmed',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 400);
+        }
+
+        $cachedCode = \Illuminate\Support\Facades\Cache::get('password_reset_' . $request->email);
+
+        if (!$cachedCode || $cachedCode != $request->code) {
+            return response()->json(['message' => 'Invalid or expired code'], 400);
+        }
+
+        $user = User::where('email', $request->email)->first();
+        $user->password = Hash::make($request->password);
+        $user->save();
+
+        // Forget the code
+        \Illuminate\Support\Facades\Cache::forget('password_reset_' . $request->email);
+
+        // Send confirmation email
+        $this->emailService->sendPasswordChangedAlert($user);
+
+        // Auto login
+        $token = $user->createToken('auth_token')->plainTextToken;
+
+        return response()->json([
+            'message' => 'Password reset successfully',
+            'access_token' => $token,
+            'token_type' => 'Bearer',
+            'user' => $user->load('perfil')
+        ]);
     }
 }
