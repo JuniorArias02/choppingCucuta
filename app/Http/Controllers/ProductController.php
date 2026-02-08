@@ -28,6 +28,11 @@ class ProductController extends Controller
             $query->where('nombre', 'like', '%' . $request->search . '%');
         }
 
+        // Filter by offers (discount > 0)
+        if ($request->has('ofertas') && $request->boolean('ofertas')) {
+            $query->where('descuento', '>', 0);
+        }
+
         $productos = $query->paginate(20);
 
         return response()->json($productos);

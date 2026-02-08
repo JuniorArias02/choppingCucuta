@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Heart, ShoppingBag, Settings, LogOut, Home, X, Menu } from 'lucide-react';
+import { LayoutDashboard, Heart, ShoppingBag, Settings, LogOut, Home, X, Menu, CreditCard } from 'lucide-react';
 import { useAuth } from '../../store/AuthContext';
 
 export default function ClientLayout() {
@@ -11,6 +11,7 @@ export default function ClientLayout() {
     const menuItems = [
         { path: '/client/dashboard', label: 'Resumen', icon: LayoutDashboard },
         { path: '/client/favorites', label: 'Mis Favoritos', icon: Heart },
+        { path: '/client/pending-payments', label: 'Pagos Pendientes', icon: CreditCard },
         { path: '/client/orders', label: 'Mis Compras', icon: ShoppingBag },
         { path: '/client/settings', label: 'Configuración', icon: Settings },
     ];

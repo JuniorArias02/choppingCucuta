@@ -31,6 +31,7 @@ Route::get('/products', [ProductController::class, 'index']);
 Route::get('/products/{product}', [ProductController::class, 'show']);
 Route::post('/products/{id}/rate', [ProductController::class, 'rate']);
 Route::post('/products/{id}/like', [ProductController::class, 'toggleLike']);
+Route::post('/payments/wompi/webhook', [App\Http\Controllers\PaymentController::class, 'handleWompiWebhook']);
 
 // Protected Routes (Admin)
 Route::middleware('auth:sanctum')->group(function () {
@@ -55,6 +56,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('/orders/{pedido}/status', [App\Http\Controllers\OrderController::class, 'updateStatus']);
 
     // Payment Routes
+    Route::post('/payments/wompi/init', [App\Http\Controllers\PaymentController::class, 'initWompiTransaction']);
     Route::post('/payments/{pago}/confirm', [App\Http\Controllers\PaymentController::class, 'confirm']);
 
     // Favorites

@@ -28,21 +28,33 @@ export default function AppLayout() {
                     <div className="flex items-center justify-between h-20 gap-4">
 
                         {/* Logo & Menu */}
-                        <div className="flex items-center gap-4">
-                            <button className="p-2 -ml-2 hover:bg-white/5 rounded-lg md:hidden text-slate-300">
-                                <Menu size={24} />
-                            </button>
-                            <Link to="/" className="flex items-center gap-3 group">
-                                <div className="relative w-10 h-10 rounded-xl overflow-hidden shadow-lg shadow-sc-magenta/20 group-hover:shadow-sc-magenta/40 transition-shadow duration-300">
-                                    <img src="/logo.jpg" alt="Logo" className="w-full h-full object-cover" />
-                                </div>
-                                <div className="flex flex-col">
-                                    <span className="text-xl font-bold bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent group-hover:to-white transition-all leading-none">
-                                        Shopping
-                                    </span>
-                                    <span className="text-xs font-bold text-sc-magenta tracking-wide uppercase leading-none mt-0.5">Cúcuta</span>
-                                </div>
-                            </Link>
+                        <div className="flex items-center gap-6">
+                            <div className="flex items-center gap-4">
+                                <button className="p-2 -ml-2 hover:bg-white/5 rounded-lg md:hidden text-slate-300">
+                                    <Menu size={24} />
+                                </button>
+                                <Link to="/" className="flex items-center gap-3 group">
+                                    <div className="relative w-10 h-10 rounded-xl overflow-hidden shadow-lg shadow-sc-magenta/20 group-hover:shadow-sc-magenta/40 transition-shadow duration-300">
+                                        <img src="/logo.jpg" alt="Logo" className="w-full h-full object-cover" />
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span className="text-xl font-bold bg-gradient-to-r from-white to-slate-400 bg-clip-text text-transparent group-hover:to-white transition-all leading-none">
+                                            Shopping
+                                        </span>
+                                        <span className="text-xs font-bold text-sc-magenta tracking-wide uppercase leading-none mt-0.5">Cúcuta</span>
+                                    </div>
+                                </Link>
+                            </div>
+
+                            {/* Desktop Links */}
+                            <div className="hidden md:flex items-center gap-1">
+                                <Link
+                                    to="/products?ofertas=true"
+                                    className="px-4 py-2 rounded-full bg-sc-magenta/10 text-sc-magenta hover:bg-sc-magenta hover:text-white transition-all text-sm font-bold flex items-center gap-2 border border-sc-magenta/20 hover:border-sc-magenta"
+                                >
+                                    Ofertas 🔥
+                                </Link>
+                            </div>
                         </div>
 
                         {/* Search Bar - Centered & Wide */}

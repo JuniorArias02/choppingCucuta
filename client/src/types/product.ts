@@ -26,7 +26,7 @@ export interface Product {
     marca: string;
     activo: boolean;
     descuento?: number;
-    imagenes: string[]; // Simplification for frontend UI
+    imagenes: string[];
     variantes: ProductVariant[];
     created_at?: string;
     updated_at?: string;

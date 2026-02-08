@@ -89,12 +89,12 @@ export default function Home() {
                     </p>
 
                     <div className="flex flex-wrap gap-4 pt-2">
-                        <button className="bg-sc-magenta hover:bg-pink-600 text-white font-bold px-8 py-3.5 rounded-xl shadow-lg shadow-sc-magenta/25 hover:shadow-sc-magenta/40 hover:-translate-y-1 transition-all flex items-center gap-2">
+                        <Link to="/products?ofertas=true" className="bg-sc-magenta hover:bg-pink-600 text-white font-bold px-8 py-3.5 rounded-xl shadow-lg shadow-sc-magenta/25 hover:shadow-sc-magenta/40 hover:-translate-y-1 transition-all flex items-center gap-2">
                             Ver Ofertas <Zap size={20} fill="currentColor" />
-                        </button>
-                        <button className="bg-white/5 hover:bg-white/10 border border-white/10 text-white font-semibold px-8 py-3.5 rounded-xl backdrop-blur-sm transition-all flex items-center gap-2">
+                        </Link>
+                        <Link to="/products" className="bg-white/5 hover:bg-white/10 border border-white/10 text-white font-semibold px-8 py-3.5 rounded-xl backdrop-blur-sm transition-all flex items-center gap-2">
                             Explorar Todo <ArrowRight size={20} />
-                        </button>
+                        </Link>
                     </div>
                 </div>
 
@@ -163,7 +163,7 @@ export default function Home() {
                         </h3>
                         <p className="text-slate-500 text-sm">Selección exclusiva basada en tus gustos</p>
                     </div>
-                    <Link to="/admin/products" className="text-sc-cyan text-sm font-bold hover:text-white transition-colors flex items-center gap-1">
+                    <Link to="/products" className="text-sc-cyan text-sm font-bold hover:text-white transition-colors flex items-center gap-1">
                         Ver todo <ArrowRight size={16} />
                     </Link>
                 </div>

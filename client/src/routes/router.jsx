@@ -17,11 +17,13 @@ import Orders from '../views/Orders';
 import Dashboard from '../views/Dashboard';
 
 import SearchResults from '../views/SearchResults';
+import AllProducts from '../views/AllProducts';
 import Settings from '../views/Settings';
 import ClientLayout from '../components/layout/ClientLayout';
 import ClientDashboard from '../views/client/ClientDashboard';
 import ClientOrders from '../views/client/ClientOrders';
 import ClientFavorites from '../views/client/ClientFavorites';
+import PendingPayments from '../views/client/PendingPayments'; // Route for pending payments
 
 // Simple Role Guard
 const RoleGuard = ({ children, allowedRoles }) => {
@@ -104,6 +106,10 @@ const router = createBrowserRouter([
                 path: 'search',
                 element: <SearchResults />,
             },
+            {
+                path: 'products',
+                element: <AllProducts />,
+            },
         ],
     },
     // Admin Routes
@@ -145,6 +151,7 @@ const router = createBrowserRouter([
             }
         ]
     },
+
     // Client Routes
     {
         path: '/client',
@@ -161,6 +168,11 @@ const router = createBrowserRouter([
             {
                 path: 'orders',
                 element: <ClientOrders />
+            },
+            {
+                path: 'pending-payments',
+                element: <PendingPayments />,
+                errorElement: <div className="text-white p-10">Error loading Pending Payments View</div>
             },
             {
                 path: 'favorites',

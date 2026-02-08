@@ -158,18 +158,27 @@ class OrderController extends Controller
                 $total += $price * $item->cantidad;
             }
 
-            // 4. Crear pedido en estado PAGADO (para testing - luego será PENDIENTE)
+            // 4. Determinar estado inicial según método de pago
+            $isOnlinePayment = in_array($request->metodo_pago, ['wompi', 'stripe']);
+            
+            // Para pagos online, el estado inicial es PENDIENTE
+            // Para pagos manuales (efectivo/transferencia), mantenemos la lógica actual de "testing" (PAGADO)
+            // En un flujo real, efectivo/transferencia también debería ser PENDIENTE hasta confirmar
+            $estadoPedido = $isOnlinePayment ? Pedido::ESTADO_PENDIENTE : Pedido::ESTADO_PAGADO;
+            $estadoPago = $isOnlinePayment ? \App\Models\Pago::ESTADO_PENDIENTE : \App\Models\Pago::ESTADO_COMPLETADO;
+            $pagadoEn = $isOnlinePayment ? null : now();
+
             $pedido = Pedido::create([
                 'usuario_id' => $user->id,
                 'total' => $total,
-                'estado' => Pedido::ESTADO_PAGADO, // CAMBIADO: Directamente pagado para testing
+                'estado' => $estadoPedido,
                 'direccion_envio' => $request->direccion_envio,
                 'ciudad' => $request->ciudad,
                 'codigo_postal' => $request->codigo_postal,
                 'telefono' => $request->telefono,
                 'metodo_pago' => $request->metodo_pago,
                 'notas_cliente' => $request->notas_cliente,
-                'pagado_en' => now(), // AGREGADO: Timestamp de pago
+                'pagado_en' => $pagadoEn,
             ]);
 
             // 5. Crear items del pedido (snapshot de precios)
@@ -185,27 +194,40 @@ class OrderController extends Controller
                 ]);
             }
 
-            // 6. DESCONTAR STOCK inmediatamente (para testing)
-            foreach ($cartItems as $item) {
-                $item->variante->decrement('stock', $item->cantidad);
+            // 6. Gestionar Stock (Descuento directo o Reserva)
+            if ($isOnlinePayment) {
+                // RESERVAR STOCK (No descontar todavía)
+                foreach ($cartItems as $item) {
+                     \App\Models\ReservaStock::create([
+                        'producto_variante_id' => $item->producto_variante_id,
+                        'pedido_id' => $pedido->id,
+                        'cantidad' => $item->cantidad,
+                        'expira_en' => now()->addMinutes(Pedido::TIEMPO_EXPIRACION_PENDIENTE)
+                     ]);
+                }
+            } else {
+                // DESCONTAR STOCK (Lógica inmediata para testing en efectivo/transf)
+                foreach ($cartItems as $item) {
+                    $item->variante->decrement('stock', $item->cantidad);
 
-                // Registrar movimiento de stock
-                \App\Models\MovimientoStock::create([
-                    'producto_variante_id' => $item->producto_variante_id,
-                    'tipo' => \App\Models\MovimientoStock::TIPO_SALIDA,
-                    'cantidad' => -$item->cantidad,
-                    'motivo' => "Venta - Pedido #{$pedido->id}",
-                ]);
+                    // Registrar movimiento de stock
+                    \App\Models\MovimientoStock::create([
+                        'producto_variante_id' => $item->producto_variante_id,
+                        'tipo' => \App\Models\MovimientoStock::TIPO_SALIDA,
+                        'cantidad' => -$item->cantidad,
+                        'motivo' => "Venta - Pedido #{$pedido->id}",
+                    ]);
+                }
             }
 
-            // 7. Crear registro de pago en estado COMPLETADO (para testing)
+            // 7. Crear registro de pago
             $pago = \App\Models\Pago::create([
                 'pedido_id' => $pedido->id,
                 'metodo_pago' => $request->metodo_pago,
-                'estado' => \App\Models\Pago::ESTADO_COMPLETADO, // CAMBIADO: Completado para testing
+                'estado' => $estadoPago,
                 'monto' => $total,
                 'moneda' => 'COP',
-                'fecha_pago' => now(),
+                'fecha_pago' => $pagadoEn,
             ]);
 
             // 8. Limpiar carrito
@@ -213,12 +235,14 @@ class OrderController extends Controller
 
             DB::commit();
 
-            // Enviar correo de confirmación
-            try {
-                $this->emailService->sendOrderConfirmation($user, $pedido->load('items.variante.producto'));
-            } catch (\Exception $e) {
-                // Loguear error pero no detener el proceso de pedido
-                \Illuminate\Support\Facades\Log::error("Error enviando correo de confirmación: " . $e->getMessage());
+            // Enviar correo de confirmación (Solo si NO es pago online, o sea Efectivo/Transferencia)
+            // Para Wompi/Stripe, el correo se envía en el Webhook cuando se aprueba el pago.
+            if (!$isOnlinePayment) {
+                try {
+                    $this->emailService->sendOrderConfirmation($user, $pedido->load('items.variante.producto'));
+                } catch (\Exception $e) {
+                    \Illuminate\Support\Facades\Log::error("Error enviando correo de confirmación: " . $e->getMessage());
+                }
             }
 
             // 9. Preparar respuesta
